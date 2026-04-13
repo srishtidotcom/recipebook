@@ -4,7 +4,24 @@ const slugify = require('slugify');
 const isValidYoutubeUrl = (url = '') => {
   if (!url) return true;
   const trimmed = url.trim();
-  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmed);
+
+  try {
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const parsed = new URL(normalized);
+    const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+
+    if (host === 'youtu.be') return parsed.pathname.length > 1;
+
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (parsed.pathname === '/watch') return Boolean(parsed.searchParams.get('v'));
+      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/')[2]?.length > 0;
+      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/')[2]?.length > 0;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
 };
 
 const normalizeYoutubeUrl = (url) => {
