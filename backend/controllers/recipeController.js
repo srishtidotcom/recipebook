@@ -1,6 +1,12 @@
 const db = require('../config/db');
 const slugify = require('slugify');
 
+const isValidYoutubeUrl = (url = '') => {
+  if (!url) return true;
+  const trimmed = url.trim();
+  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmed);
+};
+
 // GET /api/recipes  (with search + category filter)
 const getRecipes = async (req, res) => {
   const { search, category, page = 1, limit = 12 } = req.query;
@@ -98,6 +104,7 @@ const getUserRecipes = async (req, res) => {
 const createRecipe = async (req, res) => {
   const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   if (!title || !category) return res.status(400).json({ message: 'Title and category required' });
+  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Please provide a valid YouTube link' });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   let baseSlug = slugify(title, { lower: true, strict: true });
@@ -132,6 +139,7 @@ const createRecipe = async (req, res) => {
 const updateRecipe = async (req, res) => {
   const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Please provide a valid YouTube link' });
 
   try {
     const [rows] = await db.query('SELECT * FROM recipes WHERE id = ?', [req.params.id]);

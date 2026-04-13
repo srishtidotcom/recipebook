@@ -189,6 +189,9 @@ export default function RecipeDetail() {
 
       <div className="mb-10">
         <h2 className="font-display text-2xl text-bark-900 mb-3">Recipe Video</h2>
+        {!recipe.youtube_url && (
+          <p className="text-sm text-bark-500 mb-3">Auto-generated from recipe name. Add a YouTube link while creating/editing for a specific video.</p>
+        )}
         <div className="rounded-2xl overflow-hidden border border-bark-500/10 bg-white">
           <iframe
             className="w-full aspect-video"

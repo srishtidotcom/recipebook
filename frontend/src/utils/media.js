@@ -1,6 +1,8 @@
 export function getRecipeFallbackImage(title = '') {
-  const query = encodeURIComponent(`${title} food recipe`.trim());
-  return `https://source.unsplash.com/800x600/?${query}`;
+  const cleanTitle = (title || 'recipe').trim();
+  const query = encodeURIComponent(`${cleanTitle},food`);
+  const lock = encodeURIComponent(cleanTitle.toLowerCase());
+  return `https://loremflickr.com/800/600/${query}?lock=${lock}`;
 }
 
 export function getRecipeImageUrl(recipe) {
