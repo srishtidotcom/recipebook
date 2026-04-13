@@ -7,6 +7,12 @@ const isValidYoutubeUrl = (url = '') => {
   return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmed);
 };
 
+const normalizeYoutubeUrl = (url) => {
+  if (typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  return trimmed || null;
+};
+
 // GET /api/recipes  (with search + category filter)
 const getRecipes = async (req, res) => {
   const { search, category, page = 1, limit = 12 } = req.query;
@@ -124,7 +130,7 @@ const createRecipe = async (req, res) => {
       [
         req.user.id, title, slug, description, category,
         prep_time || 0, cook_time || 0, servings || 4,
-        ingredients || '[]', instructions || '[]', image, youtube_url?.trim() || null,
+        ingredients || '[]', instructions || '[]', image, normalizeYoutubeUrl(youtube_url),
       ]
     );
 
@@ -160,7 +166,7 @@ const updateRecipe = async (req, res) => {
       category || recipe.category, prep_time ?? recipe.prep_time,
       cook_time ?? recipe.cook_time, servings ?? recipe.servings,
       ingredients || recipe.ingredients, instructions || recipe.instructions,
-      youtube_url !== undefined ? youtube_url.trim() : recipe.youtube_url,
+      youtube_url !== undefined ? normalizeYoutubeUrl(youtube_url) : recipe.youtube_url,
     ];
 
     if (image) { fields.push('image = ?'); values.push(image); }
