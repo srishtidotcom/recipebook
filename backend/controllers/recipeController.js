@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const slugify = require('slugify');
 
+// YouTube video IDs are 11 characters and use letters, numbers, underscore, and hyphen.
 const YOUTUBE_VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
 
 const isValidYoutubeUrl = (url = '') => {
@@ -132,7 +133,7 @@ const getUserRecipes = async (req, res) => {
 const createRecipe = async (req, res) => {
   const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   if (!title || !category) return res.status(400).json({ message: 'Title and category required' });
-  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Please provide a valid YouTube link' });
+  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Invalid YouTube URL format. Use a valid youtube.com or youtu.be link.' });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   let baseSlug = slugify(title, { lower: true, strict: true });
@@ -167,7 +168,7 @@ const createRecipe = async (req, res) => {
 const updateRecipe = async (req, res) => {
   const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : undefined;
-  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Please provide a valid YouTube link' });
+  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Invalid YouTube URL format. Use a valid youtube.com or youtu.be link.' });
 
   try {
     const [rows] = await db.query('SELECT * FROM recipes WHERE id = ?', [req.params.id]);

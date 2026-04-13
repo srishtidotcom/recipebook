@@ -97,6 +97,7 @@ export default function RecipeDetail() {
   const isOwner = user?.id === recipe.author_id || user?.id === recipe.user_id;
   const imageUrl = getRecipeImageUrl(recipe);
   const youtubeEmbedUrl = getRecipeYoutubeEmbedUrl(recipe.youtube_url, recipe.title);
+  const videoHeading = recipe.youtube_url ? 'Recipe Video' : 'Related Videos';
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 fade-up">
@@ -188,7 +189,7 @@ export default function RecipeDetail() {
       )}
 
       <div className="mb-10">
-        <h2 className="font-display text-2xl text-bark-900 mb-3">Recipe Video</h2>
+        <h2 className="font-display text-2xl text-bark-900 mb-3">{videoHeading}</h2>
         {!recipe.youtube_url && (
           <p className="text-sm text-bark-500 mb-3">Showing YouTube search results based on recipe name. Add a YouTube link while creating or editing for a specific video.</p>
         )}
