@@ -1,6 +1,8 @@
 const db = require('../config/db');
 const slugify = require('slugify');
 
+const YOUTUBE_VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
+
 const isValidYoutubeUrl = (url = '') => {
   if (!url) return true;
   const trimmed = url.trim();
@@ -10,12 +12,15 @@ const isValidYoutubeUrl = (url = '') => {
     const parsed = new URL(normalized);
     const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
 
-    if (host === 'youtu.be') return parsed.pathname.length > 1;
+    if (host === 'youtu.be') {
+      const id = parsed.pathname.split('/').filter(Boolean)[0];
+      return YOUTUBE_VIDEO_ID_REGEX.test(id || '');
+    }
 
     if (host === 'youtube.com' || host === 'm.youtube.com') {
-      if (parsed.pathname === '/watch') return Boolean(parsed.searchParams.get('v'));
-      if (parsed.pathname.startsWith('/embed/')) return parsed.pathname.split('/')[2]?.length > 0;
-      if (parsed.pathname.startsWith('/shorts/')) return parsed.pathname.split('/')[2]?.length > 0;
+      if (parsed.pathname === '/watch') return YOUTUBE_VIDEO_ID_REGEX.test(parsed.searchParams.get('v') || '');
+      if (parsed.pathname.startsWith('/embed/')) return YOUTUBE_VIDEO_ID_REGEX.test(parsed.pathname.split('/')[2] || '');
+      if (parsed.pathname.startsWith('/shorts/')) return YOUTUBE_VIDEO_ID_REGEX.test(parsed.pathname.split('/')[2] || '');
     }
 
     return false;
