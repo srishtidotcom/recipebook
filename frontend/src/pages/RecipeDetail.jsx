@@ -6,6 +6,7 @@ import {
   CheckCircle2, AlertCircle, ArrowLeft, Flame
 } from 'lucide-react';
 import { useAuth } from '../components/AuthContext';
+import { getRecipeImageUrl, getRecipeYoutubeEmbedUrl } from '../utils/media';
 
 export default function RecipeDetail() {
   const { slug } = useParams();
@@ -94,6 +95,8 @@ export default function RecipeDetail() {
 
   const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
   const isOwner = user?.id === recipe.author_id || user?.id === recipe.user_id;
+  const imageUrl = getRecipeImageUrl(recipe);
+  const youtubeEmbedUrl = getRecipeYoutubeEmbedUrl(recipe.youtube_url, recipe.title);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 fade-up">
@@ -104,8 +107,8 @@ export default function RecipeDetail() {
 
       {/* Hero image */}
       <div className="relative rounded-3xl overflow-hidden mb-8 h-72 md:h-96 bg-cream-200">
-        {recipe.image ? (
-          <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+        {imageUrl ? (
+          <img src={imageUrl} alt={recipe.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-terracotta-400/20 to-bark-500/10 flex items-center justify-center">
             <ChefHat size={64} className="text-bark-500/20" />
@@ -122,7 +125,7 @@ export default function RecipeDetail() {
 
       {/* Meta row */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4 text-sm text-bark-600 flex-wrap">
+        <div className="flex flex-col items-start gap-2 text-sm text-bark-600">
           {recipe.prep_time > 0 && (
             <span className="flex items-center gap-1.5 bg-cream-100 px-3 py-1.5 rounded-full">
               <Clock size={14} className="text-terracotta-500" /> Prep: {recipe.prep_time}m
@@ -183,6 +186,20 @@ export default function RecipeDetail() {
           {recipe.description}
         </p>
       )}
+
+      <div className="mb-10">
+        <h2 className="font-display text-2xl text-bark-900 mb-3">Recipe Video</h2>
+        <div className="rounded-2xl overflow-hidden border border-bark-500/10 bg-white">
+          <iframe
+            className="w-full aspect-video"
+            src={youtubeEmbedUrl}
+            title={`${recipe.title} video`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-5 gap-8 mb-12">
         {/* Ingredients */}

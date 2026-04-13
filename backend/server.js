@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const db = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,4 +35,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error' });
 });
 
-app.listen(PORT, () => console.log(`🚀 RecipeBook API running on http://localhost:${PORT}`));
+const ensureRecipeColumns = async () => {
+  try {
+    await db.query('ALTER TABLE recipes ADD COLUMN IF NOT EXISTS youtube_url VARCHAR(500)');
+  } catch (err) {
+    console.error('⚠️ Failed to ensure recipe schema columns:', err.message);
+  }
+};
+
+ensureRecipeColumns().finally(() => {
+  app.listen(PORT, () => console.log(`🚀 RecipeBook API running on http://localhost:${PORT}`));
+});

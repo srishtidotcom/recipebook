@@ -96,7 +96,7 @@ const getUserRecipes = async (req, res) => {
 
 // POST /api/recipes
 const createRecipe = async (req, res) => {
-  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions } = req.body;
+  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   if (!title || !category) return res.status(400).json({ message: 'Title and category required' });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
@@ -112,12 +112,12 @@ const createRecipe = async (req, res) => {
     }
 
     const [result] = await db.query(
-      `INSERT INTO recipes (user_id, title, slug, description, category, prep_time, cook_time, servings, ingredients, instructions, image)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO recipes (user_id, title, slug, description, category, prep_time, cook_time, servings, ingredients, instructions, image, youtube_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         req.user.id, title, slug, description, category,
         prep_time || 0, cook_time || 0, servings || 4,
-        ingredients || '[]', instructions || '[]', image,
+        ingredients || '[]', instructions || '[]', image, youtube_url?.trim() || null,
       ]
     );
 
@@ -130,7 +130,7 @@ const createRecipe = async (req, res) => {
 
 // PUT /api/recipes/:id
 const updateRecipe = async (req, res) => {
-  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions } = req.body;
+  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : undefined;
 
   try {
@@ -145,13 +145,14 @@ const updateRecipe = async (req, res) => {
     const fields = [
       'title = ?', 'slug = ?', 'description = ?', 'category = ?',
       'prep_time = ?', 'cook_time = ?', 'servings = ?',
-      'ingredients = ?', 'instructions = ?'
+      'ingredients = ?', 'instructions = ?', 'youtube_url = ?'
     ];
     const values = [
       updatedTitle, newSlug, description || recipe.description,
       category || recipe.category, prep_time ?? recipe.prep_time,
       cook_time ?? recipe.cook_time, servings ?? recipe.servings,
       ingredients || recipe.ingredients, instructions || recipe.instructions,
+      youtube_url !== undefined ? youtube_url.trim() : recipe.youtube_url,
     ];
 
     if (image) { fields.push('image = ?'); values.push(image); }
