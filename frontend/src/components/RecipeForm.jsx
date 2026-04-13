@@ -11,6 +11,7 @@ export default function RecipeForm({ initial = {}, onSubmit, loading, submitLabe
     prep_time: initial.prep_time || '',
     cook_time: initial.cook_time || '',
     servings: initial.servings || 4,
+    youtube_url: initial.youtube_url || '',
     ingredients: initial.ingredients?.length ? initial.ingredients : [''],
     instructions: initial.instructions?.length ? initial.instructions : [''],
   });
@@ -101,6 +102,18 @@ export default function RecipeForm({ initial = {}, onSubmit, loading, submitLabe
           <select value={form.category} onChange={e => setField('category', e.target.value)} className="input-field">
             {CATEGORIES.map(c => <option key={c}>{c}</option>)}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-bark-800 mb-1.5">YouTube Link (optional)</label>
+          <input
+            type="url"
+            value={form.youtube_url}
+            onChange={e => setField('youtube_url', e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="input-field"
+          />
+          <p className="text-xs text-bark-400 mt-1">If left blank, RecipeBook will auto-show a YouTube preview based on recipe name.</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4">

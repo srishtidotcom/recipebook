@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Clock, Users, ChefHat } from 'lucide-react';
+import { getRecipeImageUrl } from '../utils/media';
 
 const CATEGORY_COLORS = {
   Breakfast: 'bg-amber-100 text-amber-700',
@@ -23,14 +24,15 @@ export default function RecipeCard({ recipe }) {
   const totalTime = (recipe.prep_time || 0) + (recipe.cook_time || 0);
   const colorIdx = recipe.id % PLACEHOLDER_COLORS.length;
   const badgeClass = CATEGORY_COLORS[recipe.category] || CATEGORY_COLORS.Other;
+  const imageUrl = getRecipeImageUrl(recipe);
 
   return (
     <Link to={`/recipe/${recipe.slug}`} className="card group block">
       {/* Image */}
       <div className="relative h-48 overflow-hidden bg-cream-200">
-        {recipe.image ? (
+        {imageUrl ? (
           <img
-            src={recipe.image}
+            src={imageUrl}
             alt={recipe.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />

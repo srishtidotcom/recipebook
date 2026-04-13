@@ -1,6 +1,41 @@
 const db = require('../config/db');
 const slugify = require('slugify');
 
+// YouTube video IDs are 11 characters and use letters, numbers, underscore, and hyphen.
+const YOUTUBE_VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
+
+const isValidYoutubeUrl = (url = '') => {
+  if (!url) return true;
+  const trimmed = url.trim();
+
+  try {
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const parsed = new URL(normalized);
+    const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+
+    if (host === 'youtu.be') {
+      const id = parsed.pathname.split('/').filter(Boolean)[0];
+      return YOUTUBE_VIDEO_ID_REGEX.test(id || '');
+    }
+
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (parsed.pathname === '/watch') return YOUTUBE_VIDEO_ID_REGEX.test(parsed.searchParams.get('v') || '');
+      if (parsed.pathname.startsWith('/embed/')) return YOUTUBE_VIDEO_ID_REGEX.test(parsed.pathname.split('/')[2] || '');
+      if (parsed.pathname.startsWith('/shorts/')) return YOUTUBE_VIDEO_ID_REGEX.test(parsed.pathname.split('/')[2] || '');
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+const normalizeYoutubeUrl = (url) => {
+  if (typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  return trimmed || null;
+};
+
 // GET /api/recipes  (with search + category filter)
 const getRecipes = async (req, res) => {
   const { search, category, page = 1, limit = 12 } = req.query;
@@ -96,8 +131,9 @@ const getUserRecipes = async (req, res) => {
 
 // POST /api/recipes
 const createRecipe = async (req, res) => {
-  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions } = req.body;
+  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   if (!title || !category) return res.status(400).json({ message: 'Title and category required' });
+  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Invalid YouTube URL format. Use a valid youtube.com or youtu.be link.' });
 
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   let baseSlug = slugify(title, { lower: true, strict: true });
@@ -112,12 +148,12 @@ const createRecipe = async (req, res) => {
     }
 
     const [result] = await db.query(
-      `INSERT INTO recipes (user_id, title, slug, description, category, prep_time, cook_time, servings, ingredients, instructions, image)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO recipes (user_id, title, slug, description, category, prep_time, cook_time, servings, ingredients, instructions, image, youtube_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         req.user.id, title, slug, description, category,
         prep_time || 0, cook_time || 0, servings || 4,
-        ingredients || '[]', instructions || '[]', image,
+        ingredients || '[]', instructions || '[]', image, normalizeYoutubeUrl(youtube_url),
       ]
     );
 
@@ -130,8 +166,9 @@ const createRecipe = async (req, res) => {
 
 // PUT /api/recipes/:id
 const updateRecipe = async (req, res) => {
-  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions } = req.body;
+  const { title, description, category, prep_time, cook_time, servings, ingredients, instructions, youtube_url } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+  if (!isValidYoutubeUrl(youtube_url)) return res.status(400).json({ message: 'Invalid YouTube URL format. Use a valid youtube.com or youtu.be link.' });
 
   try {
     const [rows] = await db.query('SELECT * FROM recipes WHERE id = ?', [req.params.id]);
@@ -145,13 +182,14 @@ const updateRecipe = async (req, res) => {
     const fields = [
       'title = ?', 'slug = ?', 'description = ?', 'category = ?',
       'prep_time = ?', 'cook_time = ?', 'servings = ?',
-      'ingredients = ?', 'instructions = ?'
+      'ingredients = ?', 'instructions = ?', 'youtube_url = ?'
     ];
     const values = [
       updatedTitle, newSlug, description || recipe.description,
       category || recipe.category, prep_time ?? recipe.prep_time,
       cook_time ?? recipe.cook_time, servings ?? recipe.servings,
       ingredients || recipe.ingredients, instructions || recipe.instructions,
+      youtube_url !== undefined ? normalizeYoutubeUrl(youtube_url) : recipe.youtube_url,
     ];
 
     if (image) { fields.push('image = ?'); values.push(image); }
